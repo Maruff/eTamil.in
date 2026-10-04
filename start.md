@@ -107,6 +107,36 @@ archive is listed with its SHA-256 on the
 [releases page]({{ site.brand.releases_url }}).
 </div>
 
+## Other ways to install
+
+Each of these installs the same compiler, standard library and examples as the archives above.
+
+| Where | Command |
+|---|---|
+| **Homebrew** (macOS, Linux) | `brew install Maruff/etamil/etamil` |
+| **apt** (Debian, Ubuntu) | add the repository below, then `sudo apt install etamil` |
+| **rpm** (Fedora, RHEL, openSUSE) | `sudo dnf install ./etamil-<version>-1.x86_64.rpm`, from the [releases page]({{ site.brand.releases_url }}) |
+| **Docker** | `docker run --rm -v "$PWD":/work ghcr.io/maruff/etamil --vm hello.qmz` |
+| **npm** | `npx etamil hello.qmz`, or `npm install -g etamil` |
+| **.NET** | `dotnet tool install -g etamil` |
+| **GitHub Actions** | `uses: Maruff/setup-etamil@v1` |
+
+**apt.** The repository is on the releases page, signed with a key published beside it:
+
+```bash
+sudo curl -fsSL https://github.com/Maruff/eTamil_lang/releases/latest/download/etamil-archive-keyring.gpg \
+    -o /usr/share/keyrings/etamil.gpg
+echo "deb [signed-by=/usr/share/keyrings/etamil.gpg] https://github.com/Maruff/eTamil_lang/releases/latest/download ./" \
+    | sudo tee /etc/apt/sources.list.d/etamil.list
+sudo apt update && sudo apt install etamil
+```
+
+It holds the newest release only, so `apt upgrade` moves you to the next one.
+
+**Docker.** The image runs `etamil` as a non-root user with `/work` as its working directory,
+so mount your folder there. Use a release tag, such as `ghcr.io/maruff/etamil:2.0.0`, rather
+than relying on `latest`.
+
 ## Build from source
 
 Worth doing if you want the LLVM
@@ -229,6 +259,20 @@ if they drift — so the editor cannot fall behind the compiler. To run a compil
 of your own instead, point `etamil.compilerPath` at it; to use `etamil` at a
 terminal as well, run **eTamil: Install the compiler for use outside the
 editor**.
+
+The same extension is on Open VSX, so **Cursor, Windsurf and VSCodium** get it too. Other editors:
+
+- **JetBrains IDEs** (2024.2 and later): a [plugin]({{ site.brand.compiler_repo }}/tree/main/packaging/jetbrains) with
+  highlighting, the language server and a run configuration, so Ctrl+Shift+F10 runs, checks or serves a `.qmz` file.
+- **Visual Studio:** [extensions]({{ site.brand.compiler_repo }}/tree/main/packaging/visualstudio) for the language and the language server.
+- **Emacs:** [`etamil-mode`]({{ site.brand.compiler_repo }}/tree/main/eTamil_Emacs), with Eglot set up.
+- **Neovim, Helix and Zed:** the [tree-sitter grammar]({{ site.brand.compiler_repo }}/tree/main/tree-sitter-etamil).
+- **Any editor that speaks the Language Server Protocol:** `etamil-lsp`, which is in every release package, gives the
+  compiler's own diagnostics, completion, hover and go to definition.
+- **Jupyter:** an [eTamil kernel]({{ site.brand.compiler_repo }}/tree/main/eTamil_Jupyter), so a notebook cell runs eTamil.
+
+Some of these are built and tested but have not yet been tried in a live editor; the [status page]({{ '/status/' | relative_url }})
+says which.
 
 ## Where next
 
