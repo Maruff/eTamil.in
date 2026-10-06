@@ -1,0 +1,104 @@
+# Keep the figures this site states about the language in step with the compiler.
+#
+# The site says how many keywords, spellings, builtins and library functions the
+# language has, in a dozen places, and every figure was typed by hand and went
+# stale as the compiler grew. The compiler's own CI only *checks* them
+# (scripts/check_site_counts.py --check), which fails a compiler change until
+# someone edits this repository. This does that edit.
+#
+# It opens a pull request and never pushes to main: the compiler's generated data
+# goes straight to its repository because that repository's own tests gate it,
+# but this is public text, and a person should see it before it is published.
+#
+# One branch, one pull request. A later run rewrites the branch, so a figure that
+# changes twice before anyone merges is still one pull request, not two.
+#
+# What it does not touch: brand.version in _config.yml. That changes at a release,
+# and a release is a decision, not a count. check_site_counts.py reports it as
+# stale until then; the pull request body says so.
+#
+# Needs, once: Settings -> Actions -> General -> Workflow permissions -> "Allow
+# GitHub Actions to create and approve pull requests". Scheduled workflows are
+# switched off by GitHub after 60 days without a push to the repository; a run by
+# hand (Actions -> this workflow -> Run workflow) switches them back on.
+
+name: Site counts from the compiler
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  BRANCH: bot/site-counts
+
+jobs:
+  update:
+    name: update the figures
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the site
+        uses: actions/checkout@v4
+        with:
+          path: site
+
+      # The compiler's main: the figures are computed from its lexer and nUlakam.
+      - name: Check out the compiler
+        uses: actions/checkout@v4
+        with:
+          repository: Maruff/eTamil_lang
+          ref: main
+          path: compiler
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # --fix also rewrites the compiler checkout's own README figures; that
+      # checkout is thrown away, and only the site's changes are committed.
+      - name: Rewrite the stale figures
+        run: python compiler/scripts/check_site_counts.py --fix --site site | tee counts.txt
+
+      - name: Open or update the pull request
+        working-directory: site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet; then
+            echo "the site's figures already match the compiler; nothing to do"
+            exit 0
+          fi
+
+          compiler_sha="$(git -C ../compiler rev-parse --short=8 HEAD)"
+          git config user.name  "eTamil generator"
+          git config user.email "esan@etamil.in"
+          git checkout -B "$BRANCH"
+          git commit -a -m "Site figures from the compiler at ${compiler_sha}" \
+            -m "Written by .github/workflows/site-counts.yml, which runs scripts/check_site_counts.py --fix from Maruff/eTamil_lang@${compiler_sha}."
+          git push --force origin "$BRANCH"
+
+          {
+            echo "The figures this site states about the language no longer matched the compiler's \`main\` (${compiler_sha}). This rewrites them with \`scripts/check_site_counts.py --fix\`."
+            echo
+            echo "Read the diff: it is public text. A sentence the script does not have a pattern for is left alone, so a clean diff here does not prove every figure is right."
+            echo
+            echo "**Not changed here:** \`brand.version\` in \`_config.yml\`. It is edited by hand at a release. If it is listed below as stale, that is expected until the next release."
+            echo
+            echo '```'
+            cat ../counts.txt
+            echo '```'
+          } > ../body.md
+
+          if [ -n "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')" ]; then
+            gh pr edit "$BRANCH" --body-file ../body.md
+            echo "updated the open pull request"
+          else
+            gh pr create --head "$BRANCH" --base main \
+              --title "Update the site's figures from the compiler" \
+              --body-file ../body.md
+          fi
