@@ -1,73 +1,15 @@
-// Share the program as a link, and keep it from being lost.
+// Share the program as a link.
 //
-// Two things the browser editor lacked. A reader who wrote something worth showing had no
-// way to send it, and closing the tab lost whatever they had typed. Both are client-side:
-// the link carries the program in its `#` fragment (see etamil-share-core.js), and the
-// working copy is kept in localStorage. No server is involved, and nothing is sent anywhere.
+// The link carries the program in its `#` fragment (see etamil-share-core.js), so it is
+// never sent to a server. Opening a link is handled by etamil-project.js, which adds the
+// program to the reader's project as a new file instead of overwriting their work.
 //
 // Only the main editor on a page gets this (see main.js): an editor embedded in prose
-// illustrates the paragraph above it, and restoring someone's saved program into it would
-// put the wrong code under that paragraph.
+// illustrates the paragraph above it.
 
-import { EditorView, ViewPlugin } from '@codemirror/view'
+import { EditorView } from '@codemirror/view'
 import { toolbarControl } from './etamil-toolbar.js'
-import { encodeShare, decodeShare, SHARE_KEY } from './etamil-share-core.js'
-
-// One saved program per page, so the tour and the playground do not overwrite each other.
-const storageKey = () => 'etamil-ide:doc:' + location.pathname
-
-function read(key) {
-  try {
-    return localStorage.getItem(key)
-  } catch {
-    return null // storage blocked, as in some private windows
-  }
-}
-
-function write(key, value) {
-  try {
-    localStorage.setItem(key, value)
-  } catch {
-    // Quota or blocked: autosave is a convenience, never a reason to interrupt typing.
-  }
-}
-
-// Opens with the shared program if the URL carries one, otherwise with the saved one; then,
-// and only then, starts saving. Starting earlier would overwrite the saved program with the
-// page's sample text before it had been restored.
-const restoreAndSave = ViewPlugin.define((view) => {
-  const key = storageKey()
-  let timer = null
-  let restored = false
-
-  // Not synchronously: a plugin may not dispatch while the view is being constructed.
-  Promise.resolve().then(async () => {
-    let text = null
-    if (location.hash.startsWith(SHARE_KEY)) {
-      text = await decodeShare(location.hash.slice(SHARE_KEY.length))
-      // The link has done its job. Leaving it would make a later reload discard the edits
-      // made since, in favour of the program as it was shared.
-      history.replaceState(null, '', location.pathname + location.search)
-    }
-    if (text == null) text = read(key)
-    if (text != null && text !== view.state.doc.toString()) {
-      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } })
-    }
-    restored = true
-  })
-
-  return {
-    update(update) {
-      if (!update.docChanged || !restored) return
-      clearTimeout(timer)
-      const doc = update.state.doc
-      timer = setTimeout(() => write(key, doc.toString()), 500)
-    },
-    destroy() {
-      clearTimeout(timer)
-    },
-  }
-})
+import { encodeShare, SHARE_KEY } from './etamil-share-core.js'
 
 function shareButton(view) {
   const button = document.createElement('button')
@@ -75,7 +17,7 @@ function shareButton(view) {
   button.className = 'etamil-share-button'
   const label = '🔗 பகிர் / Share'
   button.textContent = label
-  button.title = 'Copy a link to this program'
+  button.title = 'Copy a link to the open file'
 
   let reset = null
   const flash = (text) => {
@@ -119,7 +61,7 @@ const shareTheme = EditorView.theme({
   },
 })
 
-/** A share button in the run bar, a link-borne program, and autosave. */
+/** A share button in the run bar. */
 export function etamilShare() {
-  return [toolbarControl.of(shareButton), restoreAndSave, shareTheme]
+  return [toolbarControl.of(shareButton), shareTheme]
 }

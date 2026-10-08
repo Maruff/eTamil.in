@@ -12,6 +12,7 @@ import { etamilScriptSwitch } from './etamil-script-switch.js'
 import { etamilRunner } from './etamil-run.js'
 import { etamilDownload } from './etamil-download.js'
 import { etamilShare } from './etamil-share.js'
+import { etamilProject } from './etamil-project.js'
 import { mountSamples } from './etamil-samples.js'
 
 // Simple interest, which exercises every highlight category the generated
@@ -69,8 +70,8 @@ function autoMount() {
 
     // An editor with a sample list beside it gets a download button too: the
     // reader has been handed fifty programs and will want one of them on
-    // disk. It also gets a share link and autosave, since this is the one
-    // place a reader writes something of their own. An editor embedded in
+    // disk. It also gets a share link, tabs for several files and autosave,
+    // since this is the one place a reader writes something of their own. An editor embedded in
     // prose illustrates the paragraph above it and stays without the furniture.
     const listHost = el.parentElement?.querySelector('[data-etamil-samples]')
 
@@ -78,7 +79,7 @@ function autoMount() {
     // editor without this module having to own a registry.
     el.etamilView = mount(el, {
       doc: el.textContent.trim() || SAMPLE,
-      extensions: listHost ? [etamilDownload(), etamilShare()] : [],
+      extensions: listHost ? [etamilDownload(), etamilShare(), etamilProject()] : [],
     })
     // The seed text lived in the element; CodeMirror has it now.
     for (const node of [...el.childNodes]) {
