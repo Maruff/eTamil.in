@@ -47,6 +47,7 @@ This table is the honest state of the code, not a wish list.
 | Standard library (`nUlakam/`) | <span class="pill pill-ok">Working</span> | strings, math, arrays, money — **written in eTamil** |
 | Accounting framework | <span class="pill pill-ok">Working</span> | double entry, GST, three statements — **written in eTamil** |
 | SQLite (`தளம்_இணை` etc.) | <span class="pill pill-ok">Working</span> | parameterised queries only; rows return as an array of records |
+| A function of your program, called by a SQLite query (`தளம்_செயல்_பதிவு`) | <span class="pill pill-ok">Working</span> | Once per row, in a fresh VM under a step limit; a function that could reach outside the database is refused when it is registered. Exact text by default, so register it as `"numeric"` to compare or sort on it. SQLite only |
 | Connection reuse | <span class="pill pill-ok">Working</span> | `தளம்_இணை` borrows from a process-wide idle cache instead of reconnecting per request; leases are exclusive, so transactions stay isolated. `ETAMIL_DB_IDLE` caps it |
 | Named database handles | <span class="pill pill-ok">Working</span> | `தளம்_இணை SQL, "a.db", அ;` then `தளம்_வினா "SELECT …", [], வரிசைகள், அ;` — the name is an optional *trailing* operand, which the fixed-arity grammar makes unambiguous, so an unnamed connection still keys on its driver name exactly as before. Two SQLite files open at once, each query reaching its own, was previously impossible to express. An unnamed query with several open is still refused, and the message lists the open handles |
 | PostgreSQL | <span class="pill pill-ok">Working</span> | `--features postgres`; money as native `NUMERIC`, so a text column stays text — unlike SQLite, where decimals are stored as text |
@@ -90,6 +91,7 @@ This table is the honest state of the code, not a wish list.
 | JetBrains plugin | <span class="pill pill-part">Built; not tried in a live IDE</span> | Highlighting, the language server through LSP4IJ, and a run configuration (run, check only, or serve). No debugger: the compiler has none to attach to |
 | Visual Studio extensions | <span class="pill pill-part">Built; not installed in Visual Studio</span> | The language, and the language server |
 | Emacs mode | <span class="pill pill-part">Written, with tests; not yet run in Emacs</span> | Highlighting from word lists generated from the lexer, indentation, run and check, Eglot |
+| Neovim plugin | <span class="pill pill-part">Written, with headless tests; not yet run in Neovim</span> | File type, buffer settings, the language server, tree-sitter registration and `:checkhealth`; the highlight queries are generated from the lexer |
 | Jupyter kernel | <span class="pill pill-part">Tested against the compiler; not run in a real Jupyter</span> | A cell runs in the compiler's own shell, so variables and functions persist; a cell stops at its first error |
 | Retail banking libraries | <span class="pill pill-part">Tested; nothing run against an e-Sign provider or a bureau</span> | Loans, deposits, UPI AutoPay and NACH mandates, Aadhaar e-Sign, KYC and consent, and a general-ledger mapping. Rates and thresholds are parameters, never written into a library |
 | Language specification | <span class="pill pill-ok">Working</span> | The grammar is generated from the tree-sitter grammar and accepts every program in `nUlakam/` and `examples/`. It is not shown to *reject* exactly what the compiler rejects: `--check` is the judge |
@@ -97,6 +99,7 @@ This table is the honest state of the code, not a wish list.
 | GitHub Action | <span class="pill pill-ok">Working</span> | Passes on Linux (x64 and arm64), macOS and Windows against a real release, and with a pinned version |
 | Docker image, `.deb`, `.rpm`, apt repository, npm and NuGet packages | <span class="pill pill-part">Built by the release workflow; first run pending</span> | Each is checked on a clean machine before a release names it |
 | AWS template | <span class="pill pill-part">Passes <code>cfn-lint</code>; never deployed</span> | A CloudFormation template for ECS Fargate behind a load balancer |
+| Azure template | <span class="pill pill-part">Passes the Bicep compiler and linter; never deployed</span> | A Bicep template for Azure Container Apps with HTTPS ingress, Key Vault secrets and logs in Log Analytics |
 
 </div>
 

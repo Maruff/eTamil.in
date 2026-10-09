@@ -266,7 +266,8 @@ The same extension is on Open VSX, so **Cursor, Windsurf and VSCodium** get it t
   highlighting, the language server and a run configuration, so Ctrl+Shift+F10 runs, checks or serves a `.qmz` file.
 - **Visual Studio:** [extensions]({{ site.brand.compiler_repo }}/tree/main/packaging/visualstudio) for the language and the language server.
 - **Emacs:** [`etamil-mode`]({{ site.brand.compiler_repo }}/tree/main/eTamil_Emacs), with Eglot set up.
-- **Neovim, Helix and Zed:** the [tree-sitter grammar]({{ site.brand.compiler_repo }}/tree/main/tree-sitter-etamil).
+- **Neovim:** a [plugin]({{ site.brand.compiler_repo }}/tree/main/eTamil_Neovim) with file type detection, the language server, tree-sitter highlighting and `:checkhealth etamil`.
+- **Helix and Zed:** the [tree-sitter grammar]({{ site.brand.compiler_repo }}/tree/main/tree-sitter-etamil).
 - **Any editor that speaks the Language Server Protocol:** `etamil-lsp`, which is in every release package, gives the
   compiler's own diagnostics, completion, hover and go to definition.
 - **Jupyter:** an [eTamil kernel]({{ site.brand.compiler_repo }}/tree/main/eTamil_Jupyter), so a notebook cell runs eTamil.

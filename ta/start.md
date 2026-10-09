@@ -258,7 +258,8 @@ compiler for use outside the editor** கட்டளையை இயக்க�
   வண்ணமிடல், மொழிச் சேவையகம், இயக்க அமைவு ஆகியவற்றுடன்; Ctrl+Shift+F10 ஒரு `.qmz` கோப்பை இயக்கும், சரிபார்க்கும் அல்லது சேவையாக்கும்.
 - **Visual Studio:** மொழிக்கும் மொழிச் சேவையகத்துக்குமான [நீட்சிகள்]({{ site.brand.compiler_repo }}/tree/main/packaging/visualstudio).
 - **Emacs:** [`etamil-mode`]({{ site.brand.compiler_repo }}/tree/main/eTamil_Emacs), Eglot அமைப்புடன்.
-- **Neovim, Helix, Zed:** [tree-sitter இலக்கணம்]({{ site.brand.compiler_repo }}/tree/main/tree-sitter-etamil).
+- **Neovim:** [செருகுநிரல்]({{ site.brand.compiler_repo }}/tree/main/eTamil_Neovim): கோப்பு வகை, மொழி சேவையகம், tree-sitter சிறப்பொளிர்வு, `:checkhealth etamil`.
+- **Helix, Zed:** [tree-sitter இலக்கணம்]({{ site.brand.compiler_repo }}/tree/main/tree-sitter-etamil).
 - **Language Server Protocol-ஐப் புரிந்துகொள்ளும் எந்தத் திருத்தியும்:** `etamil-lsp` — ஒவ்வொரு வெளியீட்டுத் தொகுப்பிலும் உள்ளது;
   தொகுப்பியின் சொந்தப் பிழைகள், நிறைவுசெய்தல், சுட்டுதல், வரையறைக்குச் செல்லுதல் ஆகியவற்றைத் தருகிறது.
 - **Jupyter:** [eTamil கர்னல்]({{ site.brand.compiler_repo }}/tree/main/eTamil_Jupyter) — நோட்புக் கலத்தில் eTamil இயங்கும்.
