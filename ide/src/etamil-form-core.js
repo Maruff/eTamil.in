@@ -59,6 +59,9 @@ const IDENTIFIER = /^[A-Za-z_஀-௿][A-Za-z0-9_஀-௿]*$/
 export function idProblem(id, taken = []) {
   if (!id) return 'a name is needed'
   if (!IDENTIFIER.test(id)) return 'use letters, Tamil letters, digits and _, and do not start with a digit'
+  // The downloadable programs name their own helpers with two underscores (`qokY__text`), and `__` also
+  // marks an English comment, so a name may not contain it.
+  if (id.includes('__')) return 'two underscores in a row are kept for the generated program'
   if (taken.includes(id)) return 'another field or calculation already has this name'
   return null
 }

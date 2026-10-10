@@ -24,10 +24,15 @@ runs* to read the program it makes.
 
 {% include form-builder.html %}
 
+**Take it with you.** Under the preview, two buttons turn the form into eTamil programs that need
+nothing but eTamil installed. *The app* is a small web server with this form as its page:
+`etamil --server --port 8080 pativam_cEvY.qmz`, then open `http://localhost:8080`. *A terminal program*
+asks for each field in turn: `etamil pativam_kaNakku.qmz`. Both work the form out with one eTamil function,
+so they give the answers the preview gives.
+
 **What this does not do yet.** It stores nothing: the form's design is kept in your browser and can
-be exported and imported, and the values you type are not kept anywhere. There is no database, no
-generated server and no sign-in. A form is its fields, its calculations and its checks. Those come
-next, in that order, once this part has been tried.
+be exported and imported, and the values you type are not kept anywhere, in the page or in the app. There
+is no database and no sign-in. Storage comes next, once this part has been tried.
 
 The formulas can use anything the language has: arithmetic, comparisons, text joined with `&`, and the
 built-in functions. Names are written the way eTamil writes them (`qokY` is தொகை, `vikiqam` is

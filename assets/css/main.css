@@ -446,6 +446,8 @@ img { max-width: 100%; height: auto; }
   background: var(--code-bg); color: var(--code-text); font-family: var(--mono); font-size: .8rem; line-height: 1.55; white-space: pre;
 }
 .studio-copy { margin-top: .5rem; }
+.studio-downloads { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.studio-downloads code { font-family: var(--mono); font-size: .82rem; word-break: break-all; }
 /* Reds that read on the dark theme as well as on the light one. */
 @media (prefers-color-scheme: dark) {
   .has-problem input { border-color: #FF8A8A; }

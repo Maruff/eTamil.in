@@ -199,5 +199,13 @@ preview, and the design saved in `localStorage` (and exported and imported as JS
 the form are not kept. Nothing is sent anywhere, and there is no storage, server or sign-in: that is the
 slice, by decision (docs/studio/FIRST-SLICE.md in the compiler repository).
 
+**Take it with you.** `src/etamil-form-generate.js` makes the other shape of the same form: a program with
+a function, `kaNakkitu`, from a record of text to `{ values, messages, problems }`, which a **server** and a
+**terminal program** share (so there is one answer to what a form means). The server (`pativam_cEvY.qmz`) serves
+the form as a self-contained page at `/` and answers `POST /kaNakku`; the terminal program (`pativam_kaNakku.qmz`)
+asks for each field with `உள்ளிடு`. `test/form-generate.test.mjs` runs both with a native `etamil` (set `ETAMIL_BIN`,
+or it looks for `D:/src/eTamil-bin-target/release/etamil.exe`): a real server is started and asked over HTTP, and the
+function is checked against the preview for the same values. Without a native `etamil` those tests are skipped and say so.
+
 `test/form.test.mjs` runs what the generator makes through the real compiler (the wasm in `ide/wasm`, which
 `npm run wasm` builds); without it those tests are skipped and say so.

@@ -18,6 +18,7 @@ import {
   FIELD_TYPES,
   allIds,
 } from './etamil-form-core.js'
+import { generateServer, generateCli, SERVER_FILE, CLI_FILE } from './etamil-form-generate.js'
 
 const storageKey = () => 'etamil-form:design:' + location.pathname
 
@@ -59,6 +60,16 @@ function uniqueId(base, taken) {
   let n = 1
   while (taken.includes(`${base}${n}`)) n += 1
   return `${base}${n}`
+}
+
+/** Offer `text` to the person as a file. */
+function download(name, text, type = 'text/plain') {
+  const url = URL.createObjectURL(new Blob([text], { type: `${type};charset=utf-8` }))
+  const link = h('a', { href: url, download: name })
+  document.body.append(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
 }
 
 export function mountFormBuilder(root) {
@@ -316,17 +327,7 @@ export function mountFormBuilder(root) {
     { class: 'studio-toolbar' },
     h('button', { type: 'button', onclick: () => window.confirm('Replace this form with the sample? / மாதிரியால் மாற்றவா?') && load(sampleForm()) }, 'Sample / மாதிரி'),
     h('button', { type: 'button', onclick: () => window.confirm('Clear the whole form? / முழுப் படிவத்தையும் அழிக்கவா?') && load(makeForm('')) }, 'Clear / அழி'),
-    h('button', {
-      type: 'button',
-      onclick: () => {
-        const url = URL.createObjectURL(new Blob([serialize(form)], { type: 'application/json' }))
-        const link = h('a', { href: url, download: 'etamil-form.json' })
-        document.body.append(link)
-        link.click()
-        link.remove()
-        URL.revokeObjectURL(url)
-      },
-    }, 'Export / ஏற்றுமதி'),
+    h('button', { type: 'button', onclick: () => download('etamil-form.json', serialize(form), 'application/json') }, 'Export / ஏற்றுமதி'),
     h('button', { type: 'button', onclick: () => importInput.click() }, 'Import / இறக்குமதி'),
     importInput
   )
@@ -349,6 +350,40 @@ export function mountFormBuilder(root) {
     'Copy the eTamil / நகலெடு'
   )
 
+  // The form as a program to keep. Offered only when the design is sound, because a program made from a
+  // formula the compiler would refuse is no use to anyone.
+  function offer(name, make) {
+    const problems = designProblems(form)
+    if (problems.length) {
+      notice.textContent = 'Fix the highlighted names and formulas before taking the form with you.'
+      notice.classList.add('is-error')
+      return
+    }
+    download(name, make(form))
+  }
+
+  const downloads = h(
+    'section',
+    { class: 'studio-downloads' },
+    h('h3', {}, 'Take it with you / எடுத்துச் செல்'),
+    h('p', { class: 'studio-hint' }, 'eTamil programs that work this form out, with nothing but eTamil installed.'),
+    h(
+      'div',
+      { class: 'studio-toolbar' },
+      h('button', { type: 'button', onclick: () => offer(SERVER_FILE, generateServer) }, 'The app / செயலி'),
+      h('button', { type: 'button', onclick: () => offer(CLI_FILE, generateCli) }, 'A terminal program / முனையம்')
+    ),
+    h(
+      'p',
+      { class: 'studio-hint' },
+      'The app is a small web server with this form as its page: ',
+      h('code', {}, `etamil --server --port 8080 ${SERVER_FILE}`),
+      ', then open http://localhost:8080. The terminal program asks for each field in turn: ',
+      h('code', {}, `etamil ${CLI_FILE}`),
+      '. Install eTamil from the Get started page.'
+    )
+  )
+
   root.replaceChildren(
     toolbar,
     h(
@@ -361,7 +396,8 @@ export function mountFormBuilder(root) {
         h('h2', {}, 'Preview / முன்னோட்டம்'),
         previewHost,
         notice,
-        h('details', { class: 'studio-program' }, h('summary', {}, 'The eTamil this form runs / இந்தப் படிவம் இயக்கும் eTamil'), copy, codeHost)
+        h('details', { class: 'studio-program' }, h('summary', {}, 'The eTamil this form runs / இந்தப் படிவம் இயக்கும் eTamil'), copy, codeHost),
+        downloads
       )
     )
   )
