@@ -17,6 +17,7 @@ import {
   parse,
   FIELD_TYPES,
   allIds,
+  defaultStorage,
 } from './etamil-form-core.js'
 import { generateServer, generateCli, SERVER_FILE, CLI_FILE } from './etamil-form-generate.js'
 
@@ -91,6 +92,28 @@ export function mountFormBuilder(root) {
 
   // --- the design ------------------------------------------------------------------------------
 
+  // Problems appear as the form is edited, not only when a row is added or removed: each row's own
+  // mark is set in place, so typing in a field is never interrupted by the page being rebuilt.
+  function showProblems(problems) {
+    for (const rowNode of designHost.querySelectorAll('.studio-row')) {
+      const { kind, index } = rowNode.dataset
+      const problem = problems.find((p) => p.kind === kind && String(p.index) === index)
+      rowNode.classList.toggle('has-problem', !!problem)
+      let note = rowNode.querySelector(':scope > .studio-problem')
+      if (problem && !note) {
+        note = h('span', { class: 'studio-problem' })
+        rowNode.append(note)
+      }
+      if (note) {
+        if (problem) note.textContent = problem.message
+        else note.remove()
+      }
+    }
+    const storage = problems.filter((p) => p.kind === 'storage')
+    const box = designHost.querySelector('.studio-storage-problems')
+    if (box) box.replaceChildren(...storage.map((p) => h('span', { class: 'studio-problem' }, p.message)))
+  }
+
   const problemFor = (kind, index, problems) => problems.find((p) => p.kind === kind && p.index === index)
 
   function row(kind, index, problems, cells, remove) {
@@ -117,6 +140,34 @@ export function mountFormBuilder(root) {
         changed()
       },
     })
+  }
+
+  // Whether the app made from this form keeps a record of each submission. Off by default: a form's
+  // values are worked out and forgotten unless this is on.
+  function storageSection() {
+    form.storage ??= defaultStorage()
+    const storage = form.storage
+    const options = h(
+      'div',
+      { class: 'studio-row studio-storage-options' },
+      h('label', {}, 'Table ', h('input', { type: 'text', class: 'studio-id', value: storage.table, spellcheck: false, 'aria-label': 'Table name', oninput: (e) => { storage.table = e.target.value; changed() } })),
+      h('label', {}, 'Design version ', h('input', { type: 'text', class: 'studio-id', value: String(storage.version), inputMode: 'numeric', 'aria-label': 'Design version', oninput: (e) => { storage.version = /^\d+$/.test(e.target.value.trim()) ? Number(e.target.value) : NaN; changed() } }))
+    )
+    options.hidden = !storage.on
+    return h(
+      'section',
+      { class: 'studio-section' },
+      h('h3', {}, 'Records / பதிவுகள்'),
+      h(
+        'label',
+        { class: 'studio-switch' },
+        h('input', { type: 'checkbox', checked: storage.on, 'aria-label': 'Keep a record of each submission', onchange: (e) => { storage.on = e.target.checked; options.hidden = !storage.on; changed() } }),
+        ' Keep a record of each submission / ஒவ்வொன்றையும் சேமி'
+      ),
+      h('p', { class: 'studio-hint' }, 'In the app you download, in a SQLite file next to it. Names must then be Latin letters, digits and _ (the romanization). There is no sign-in: anyone who can reach the app can read the records. The terminal program does not save.'),
+      options,
+      h('div', { class: 'studio-storage-problems' })
+    )
   }
 
   function renderDesign() {
@@ -211,8 +262,10 @@ export function mountFormBuilder(root) {
         form.checks.push({ when: '', message: '' })
         renderDesign()
         changed()
-      })
+      }),
+      storageSection()
     )
+    showProblems(problems)
   }
 
   // --- the form, as someone using it sees it ----------------------------------------------------
@@ -267,6 +320,7 @@ export function mountFormBuilder(root) {
 
   function recompute() {
     const problems = designProblems(form)
+    showProblems(problems)
     notice.textContent = ''
     notice.classList.remove('is-error')
 
@@ -378,7 +432,7 @@ export function mountFormBuilder(root) {
       { class: 'studio-hint' },
       'The app is a small web server with this form as its page: ',
       h('code', {}, `etamil --server --port 8080 ${SERVER_FILE}`),
-      ', then open http://localhost:8080. The terminal program asks for each field in turn: ',
+      ', then open http://localhost:8080. It listens on this computer only. The terminal program asks for each field in turn: ',
       h('code', {}, `etamil ${CLI_FILE}`),
       '. Install eTamil from the Get started page.'
     )

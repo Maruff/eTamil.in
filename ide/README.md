@@ -207,5 +207,14 @@ asks for each field with `உள்ளிடு`. `test/form-generate.test.mjs` 
 or it looks for `D:/src/eTamil-bin-target/release/etamil.exe`): a real server is started and asked over HTTP, and the
 function is checked against the preview for the same values. Without a native `etamil` those tests are skipped and say so.
 
+**Keeping records.** When a form's `storage.on` is true the server also makes a SQLite table (the form's, with the record's own
+columns `ilakkam`, `nEram`, `paqippu`, then a column for every field and calculation), adds any column the form has gained since, and
+serves `POST /paqivu` (validate, work out with `kaNakkitu`, insert; a form with a problem or a failed check is answered 422 and
+not kept), `GET /paqivukaL` (the latest 100 as JSON) and `GET /paqivukaL.csv`. Numbers are kept as exact text; a percent as
+typed. `storageProblems` refuses names the table cannot have (not Latin letters, digits and `_`, a clash with a record column, or
+two names that differ only by capitals, which SQLite treats as one). The design is `docs/studio/FORM-STORAGE.md` in the compiler
+repository. `test/form-storage.test.mjs` starts a real server over a database file in a temporary folder and checks exact round
+trips, the refusals, the CSV quoting, an injection attempt stored verbatim, persistence across a restart, and a form that has gained a field.
+
 `test/form.test.mjs` runs what the generator makes through the real compiler (the wasm in `ide/wasm`, which
 `npm run wasm` builds); without it those tests are skipped and say so.

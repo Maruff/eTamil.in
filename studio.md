@@ -30,9 +30,16 @@ nothing but eTamil installed. *The app* is a small web server with this form as 
 asks for each field in turn: `etamil pativam_kaNakku.qmz`. Both work the form out with one eTamil function,
 so they give the answers the preview gives.
 
-**What this does not do yet.** It stores nothing: the form's design is kept in your browser and can
-be exported and imported, and the values you type are not kept anywhere, in the page or in the app. There
-is no database and no sign-in. Storage comes next, once this part has been tried.
+**Keep the records.** Switch on *Keep a record of each submission* and the app also saves what is
+submitted, in a SQLite file next to it (`pativu.db`, or whatever you call the table). It gains a *Save* button, a
+list of the latest records at `/paqivukaL` and a CSV at `/paqivukaL.csv`. A form with a bad field or a failed check is
+not saved, and says why. A record keeps the amounts exactly and says which design saved it. Names must then be Latin
+letters, digits and `_`, the project's romanization, and the builder tells you when one is not. There is **no
+sign-in**: the app listens on your computer only, and anyone who can reach it can read the records.
+
+**What this does not do yet.** The records are only ever added, never changed or deleted. There is no sign-in, no
+PostgreSQL and no encryption, so do not use it for anything you could not leave on a shared computer. The values you type
+into the builder itself are not kept anywhere; its design is kept in your browser and can be exported and imported.
 
 The formulas can use anything the language has: arithmetic, comparisons, text joined with `&`, and the
 built-in functions. Names are written the way eTamil writes them (`qokY` is தொகை, `vikiqam` is

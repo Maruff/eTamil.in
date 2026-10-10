@@ -18,9 +18,16 @@ export const VERSION = 1
 
 export const FIELD_TYPES = ['number', 'percent', 'text']
 
+/**
+ * What saving records means for a form. Off, a form's values are worked out and forgotten. On, the
+ * downloadable app keeps each submission in a SQLite table called `table` (see FORM-STORAGE.md), and
+ * `version` is the number of this design, written into each record so a record says which design saved it.
+ */
+export const defaultStorage = () => ({ on: false, table: 'pativu', version: 1 })
+
 /** A form with nothing in it. */
 export function makeForm(title = '') {
-  return { title, fields: [], calcs: [], checks: [] }
+  return { title, fields: [], calcs: [], checks: [], storage: defaultStorage() }
 }
 
 /**
@@ -45,6 +52,7 @@ export function sampleForm() {
         message: 'The amount must not be negative / தொகை எதிர்மறையாக இருக்கக்கூடாது',
       },
     ],
+    storage: defaultStorage(),
   }
 }
 
@@ -55,6 +63,10 @@ export function sampleForm() {
 // page asks it.
 const IDENTIFIER = /^[A-Za-z_஀-௿][A-Za-z0-9_஀-௿]*$/
 
+// The generated function's own variables. A field or a calculation with one of these names would
+// overwrite it and quietly break the form.
+export const RESERVED_IDS = ['input', 'problems', 'bad', 'messages']
+
 /** What is wrong with `id` as the name of a field or a calculation, or null. */
 export function idProblem(id, taken = []) {
   if (!id) return 'a name is needed'
@@ -62,6 +74,7 @@ export function idProblem(id, taken = []) {
   // The downloadable programs name their own helpers with two underscores (`qokY__text`), and `__` also
   // marks an English comment, so a name may not contain it.
   if (id.includes('__')) return 'two underscores in a row are kept for the generated program'
+  if (RESERVED_IDS.includes(id)) return 'this name is kept for the generated program'
   if (taken.includes(id)) return 'another field or calculation already has this name'
   return null
 }
@@ -90,6 +103,44 @@ export function designProblems(form) {
       problems.push({ kind: 'check', index, id: '', message: 'a condition is needed' })
     }
   })
+  problems.push(...storageProblems(form))
+  return problems
+}
+
+// --- Saving records ----------------------------------------------------------------------------------
+
+/** The columns a saved record has of its own, in the project's romanization (இலக்கம், நேரம், பதிப்பு). */
+export const RECORD_COLUMNS = ['ilakkam', 'nEram', 'paqippu']
+
+// A database name is written in the ezuqqu romanization, because it is seen by systems with no Tamil fonts:
+// Latin letters, digits and `_`. (SQLite also treats `qokY` and `qoky` as one column, so they may not both exist.)
+const DATABASE_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/
+
+/**
+ * What is wrong with the form for saving records, as design problems. Empty when saving is off.
+ * Each is `{ kind: 'storage', index, id, message }`, with `index` 0 for the table and the version.
+ */
+export function storageProblems(form) {
+  const storage = form.storage
+  if (!storage?.on) return []
+  const problems = []
+  const add = (id, message) => problems.push({ kind: 'storage', index: 0, id, message })
+
+  if (!DATABASE_NAME.test(storage.table ?? '') || storage.table.length > 40 || storage.table.toLowerCase().startsWith('sqlite_')) {
+    add('', 'the table needs a name of Latin letters, digits and _ (up to 40), not starting with a digit')
+  }
+  if (!Number.isInteger(storage.version) || storage.version < 1) add('', 'the design version is a whole number, 1 or more')
+
+  const seen = new Set(RECORD_COLUMNS.map((c) => c.toLowerCase()))
+  for (const id of allIds(form)) {
+    if (!id) continue
+    if (!DATABASE_NAME.test(id)) {
+      add(id, `"${id}": when records are saved, a name uses Latin letters, digits and _ only (the project's romanization)`)
+    } else if (seen.has(id.toLowerCase())) {
+      add(id, `"${id}" is used by a saved record already, or differs from another name only by capital letters`)
+    }
+    seen.add(id.toLowerCase())
+  }
   return problems
 }
 
@@ -256,5 +307,10 @@ export function parse(source) {
     })),
     calcs: form.calcs.map((c) => ({ id: text(c?.id), label: text(c?.label), formula: text(c?.formula) })),
     checks: form.checks.map((c) => ({ when: text(c?.when), message: text(c?.message) })),
+    storage: {
+      on: form.storage?.on === true,
+      table: typeof form.storage?.table === 'string' ? form.storage.table : defaultStorage().table,
+      version: Number.isInteger(form.storage?.version) && form.storage.version >= 1 ? form.storage.version : 1,
+    },
   }
 }
