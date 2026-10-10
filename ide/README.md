@@ -174,5 +174,10 @@ missing file of the project's own is reported without a download. The logic is
 
 Run `npm run stdlib` after the library changes, and commit the JSON it writes.
 
-**Not offered yet:** completion and hover for the library's functions. `tools/gen_vocabulary.py`
-still drops them, because they could not run in a page when it was written. They can now.
+**Library completion and hover.** The library's 940 functions are offered as you type, with the
+module in the detail column and the documentation beside it. Accepting one adds the
+`இறக்கு "nUlakam/…";` line at the top of the file (once, however many functions from that module
+you use) and a call with the parameter names as tab stops. The names live in
+`assets/ide/etamil-library.json` (386 kB, about 50 kB compressed), written by `npm run vocabulary`
+beside the keywords and builtins, and fetched when the browser is idle rather than bundled. Until it
+arrives, completion works without library functions. The logic is `src/etamil-library-core.js`.

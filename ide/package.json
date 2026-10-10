@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "test": "node --test \"test/*.test.mjs\"",
-    "vocabulary": "py ../tools/gen_vocabulary.py --data ../../eTamil/etamil_lsp/data/language-data.json --out ../assets/ide/etamil-vocabulary.json",
+    "vocabulary": "py ../tools/gen_vocabulary.py --data ../../eTamil/etamil_lsp/data/language-data.json --out ../assets/ide/etamil-vocabulary.json --library-out ../assets/ide/etamil-library.json",
     "build": "vite build",
     "tokens": "py ../tools/gen_tokens.py --lexer ../../eTamil/etamil_compiler/src/lexer.rs --out ../assets/ide/etamil-tokens.json",
     "stdlib": "py ../tools/gen_stdlib.py --nulakam ../../eTamil/nUlakam --out ../assets/ide/etamil-stdlib.json",
