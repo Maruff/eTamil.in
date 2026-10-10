@@ -181,3 +181,40 @@ you use) and a call with the parameter names as tab stops. The names live in
 `assets/ide/etamil-library.json` (386 kB, about 50 kB compressed), written by `npm run vocabulary`
 beside the keywords and builtins, and fetched when the browser is idle rather than bundled. Until it
 arrives, completion works without library functions. The logic is `src/etamil-library-core.js`.
+
+## The Studio form builder
+
+`/studio/` (the page is `studio.md`, the include is `_includes/form-builder.html`) is the first piece of
+eTamil Studio: design a form on one side, use it on the other. A form has **fields** (a number, a percent
+or text), **calculations** (named results worked out in order, each an eTamil expression that may use the
+fields and the calculations above it) and **checks** (a condition under which the form is wrong, and the
+message to show).
+
+The form is **not** interpreted by a formula engine of its own. `src/etamil-form-core.js` turns it into an
+eTamil program (fields as assignments, then calculations, then checks, then one `id=value` line per
+calculation), and the compiler's own VM runs it in the page, so a total is exact to the paisa. A mistake in a
+formula is the compiler's own message, shown against the calculation it is in (the line it names is traced
+back through a table the generator keeps). `src/etamil-form-builder.js` is the page: the controls, the
+preview, and the design saved in `localStorage` (and exported and imported as JSON). The values typed into
+the form are not kept. Nothing is sent anywhere, and there is no storage, server or sign-in: that is the
+slice, by decision (docs/studio/FIRST-SLICE.md in the compiler repository).
+
+**Take it with you.** `src/etamil-form-generate.js` makes the other shape of the same form: a program with
+a function, `kaNakkitu`, from a record of text to `{ values, messages, problems }`, which a **server** and a
+**terminal program** share (so there is one answer to what a form means). The server (`pativam_cEvY.qmz`) serves
+the form as a self-contained page at `/` and answers `POST /kaNakku`; the terminal program (`pativam_kaNakku.qmz`)
+asks for each field with `உள்ளிடு`. `test/form-generate.test.mjs` runs both with a native `etamil` (set `ETAMIL_BIN`,
+or it looks for `D:/src/eTamil-bin-target/release/etamil.exe`): a real server is started and asked over HTTP, and the
+function is checked against the preview for the same values. Without a native `etamil` those tests are skipped and say so.
+
+**Keeping records.** When a form's `storage.on` is true the server also makes a SQLite table (the form's, with the record's own
+columns `ilakkam`, `nEram`, `paqippu`, then a column for every field and calculation), adds any column the form has gained since, and
+serves `POST /paqivu` (validate, work out with `kaNakkitu`, insert; a form with a problem or a failed check is answered 422 and
+not kept), `GET /paqivukaL` (the latest 100 as JSON) and `GET /paqivukaL.csv`. Numbers are kept as exact text; a percent as
+typed. `storageProblems` refuses names the table cannot have (not Latin letters, digits and `_`, a clash with a record column, or
+two names that differ only by capitals, which SQLite treats as one). The design is `docs/studio/FORM-STORAGE.md` in the compiler
+repository. `test/form-storage.test.mjs` starts a real server over a database file in a temporary folder and checks exact round
+trips, the refusals, the CSV quoting, an injection attempt stored verbatim, persistence across a restart, and a form that has gained a field.
+
+`test/form.test.mjs` runs what the generator makes through the real compiler (the wasm in `ide/wasm`, which
+`npm run wasm` builds); without it those tests are skipped and say so.

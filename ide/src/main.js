@@ -14,6 +14,8 @@ import { etamilDownload } from './etamil-download.js'
 import { etamilShare } from './etamil-share.js'
 import { etamilProject } from './etamil-project.js'
 import { mountSamples } from './etamil-samples.js'
+// Mounts itself on [data-etamil-form-builder], which only the Studio page has.
+import './etamil-form-builder.js'
 
 // Simple interest, which exercises every highlight category the generated
 // token table produces: `செயல்`/`எனில்`/`திரும்பு` as control flow,

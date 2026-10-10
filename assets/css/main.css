@@ -393,6 +393,73 @@ img { max-width: 100%; height: auto; }
 .ide-bar .name { margin-left: .4rem; }
 .ide-bar-note { margin-left: auto; opacity: .75; }
 
+/* ---- Studio: the form builder (ide/src/etamil-form-builder.js) -------------------------- */
+.studio-forms { margin: 1.6rem 0 2.2rem; }
+.studio-toolbar { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.studio-forms button, .studio-forms select, .studio-forms input[type="text"] {
+  font: inherit; font-size: .92rem; color: var(--text); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: .4rem .6rem; min-width: 0;
+}
+.studio-forms button { cursor: pointer; background: var(--bg-soft); }
+.studio-forms button:hover { border-color: var(--azure-lo); }
+.studio-forms input:focus-visible, .studio-forms button:focus-visible, .studio-forms select:focus-visible {
+  outline: 2px solid var(--azure); outline-offset: 1px;
+}
+.studio-columns { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1.4rem; align-items: start; }
+@media (max-width: 860px) { .studio-columns { grid-template-columns: minmax(0, 1fr); } }
+.studio-column { background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.1rem 1.2rem; }
+.studio-column h2 { font-size: 1.05rem; margin: 0 0 .8rem; }
+.studio-section { margin: 1.1rem 0 0; }
+.studio-section h3, .studio-preview h3 { font-size: .95rem; margin: 0 0 .25rem; }
+.studio-hint { margin: 0 0 .5rem; color: var(--muted); font-size: .85rem; }
+.studio-title { display: grid; gap: .25rem; font-size: .85rem; color: var(--muted); }
+.studio-title input { width: 100%; box-sizing: border-box; }
+.studio-row { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: 0 0 .45rem; }
+.studio-row input[type="text"] { flex: 1 1 8rem; }
+/* The label, or the condition of a check, has a line of its own: the rest sit beneath it. */
+.studio-row[data-kind="field"] > input:first-child,
+.studio-row[data-kind="calculation"] > input:first-child,
+.studio-row[data-kind="check"] > input { flex: 1 1 100%; }
+.studio-row[data-kind="check"] > .studio-remove { margin-left: auto; }
+.studio-row .studio-id { flex: 0 1 7rem; font-family: var(--mono); }
+.studio-row .studio-formula { flex: 2 1 12rem; font-family: var(--mono); }
+.studio-row .studio-remove { flex: 0 0 auto; padding: .3rem .6rem; line-height: 1; }
+.studio-add { margin-top: .2rem; }
+.has-problem input { border-color: #B31D28; }
+.studio-problem { flex: 1 0 100%; color: #B31D28; font-size: .82rem; }
+.studio-fields { display: grid; gap: .7rem; margin: .6rem 0 1rem; }
+.studio-field { display: grid; gap: .25rem; }
+.studio-label { font-size: .85rem; color: var(--muted); }
+.studio-input { display: flex; align-items: center; gap: .35rem; }
+.studio-input input { flex: 1; }
+.studio-unit { color: var(--muted); }
+.studio-results { display: grid; gap: .45rem; padding-top: .8rem; border-top: 1px solid var(--line); }
+.studio-result { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+.studio-value { font-family: var(--mono); font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.studio-check { margin: .4rem 0; padding: .5rem .7rem; border-radius: 8px; background: #FDECEE; color: #8A1620; font-size: .9rem; }
+.studio-notice { margin: .8rem 0 0; font-size: .88rem; color: var(--muted); }
+.studio-notice.is-error { color: #8A1620; background: #FDECEE; padding: .5rem .7rem; border-radius: 8px; }
+.studio-program { margin-top: 1rem; }
+.studio-program summary { cursor: pointer; font-size: .88rem; color: var(--link); }
+.studio-code {
+  margin: .5rem 0 0; padding: .7rem .8rem; max-height: 18rem; overflow: auto; border-radius: 8px;
+  background: var(--code-bg); color: var(--code-text); font-family: var(--mono); font-size: .8rem; line-height: 1.55; white-space: pre;
+}
+.studio-copy { margin-top: .5rem; }
+.studio-switch { display: flex; gap: .5rem; align-items: center; margin: 0 0 .4rem; font-size: .92rem; cursor: pointer; }
+.studio-switch input { width: 1rem; height: 1rem; }
+.studio-storage-options label { display: flex; gap: .4rem; align-items: center; font-size: .85rem; color: var(--muted); }
+.studio-storage-options[hidden] { display: none; }
+.studio-storage-problems { display: grid; gap: .2rem; }
+.studio-downloads { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.studio-downloads code { font-family: var(--mono); font-size: .82rem; word-break: break-all; }
+/* Reds that read on the dark theme as well as on the light one. */
+@media (prefers-color-scheme: dark) {
+  .has-problem input { border-color: #FF8A8A; }
+  .studio-problem { color: #FF9A9A; }
+  .studio-check, .studio-notice.is-error { background: rgba(255, 138, 138, .12); color: #FFB3B3; }
+}
+
 .ide-shell {
   /* Rouge's palette, so the editor matches the static examples elsewhere. */
   --ide-text:     #DCE9F8;
