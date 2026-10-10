@@ -18,7 +18,7 @@ alt_url: /ta/status/
 eTamil runs backend programs today: functions, collections, error handling,
 modules, SQL and document databases, a concurrent HTTP server with routing, and
 accounting, taxation, banking, insurance and customs frameworks written in the
-language itself. Since {{ site.brand.version }} it also runs in a browser — the
+language itself. It also runs in a browser — the
 compiler is built to WebAssembly, so the editor on this site is the real thing.
 
 This table is the honest state of the code, not a wish list.
@@ -47,6 +47,7 @@ This table is the honest state of the code, not a wish list.
 | Standard library (`nUlakam/`) | <span class="pill pill-ok">Working</span> | strings, math, arrays, money — **written in eTamil** |
 | Accounting framework | <span class="pill pill-ok">Working</span> | double entry, GST, three statements — **written in eTamil** |
 | SQLite (`தளம்_இணை` etc.) | <span class="pill pill-ok">Working</span> | parameterised queries only; rows return as an array of records |
+| A function of your program, called by a SQLite query (`தளம்_செயல்_பதிவு`) | <span class="pill pill-ok">Working</span> | Once per row, in a fresh VM under a step limit; a function that could reach outside the database is refused when it is registered. Exact text by default, so register it as `"numeric"` to compare or sort on it. SQLite only |
 | Connection reuse | <span class="pill pill-ok">Working</span> | `தளம்_இணை` borrows from a process-wide idle cache instead of reconnecting per request; leases are exclusive, so transactions stay isolated. `ETAMIL_DB_IDLE` caps it |
 | Named database handles | <span class="pill pill-ok">Working</span> | `தளம்_இணை SQL, "a.db", அ;` then `தளம்_வினா "SELECT …", [], வரிசைகள், அ;` — the name is an optional *trailing* operand, which the fixed-arity grammar makes unambiguous, so an unnamed connection still keys on its driver name exactly as before. Two SQLite files open at once, each query reaching its own, was previously impossible to express. An unnamed query with several open is still refused, and the message lists the open handles |
 | PostgreSQL | <span class="pill pill-ok">Working</span> | `--features postgres`; money as native `NUMERIC`, so a text column stays text — unlike SQLite, where decimals are stored as text |
@@ -81,11 +82,24 @@ This table is the honest state of the code, not a wish list.
 | Money as whole paise | <span class="pill pill-ok">Working</span> | `nUlakam/paNam/kAcu.qmz` — two decimal places without decimal arithmetic; `ரூபாயும்_பைசாவும்(2, 5)` is ₹2.05 |
 | Depreciation and payroll | <span class="pill pill-ok">Working</span> | `nUlakam/kaNakkiyal/qEymAZam.qmz` and `Uqiyam.qmz`, posting into the same ledger — **written in eTamil** |
 | WebAssembly target | <span class="pill pill-ok">Working</span> | `cargo build --target wasm32-unknown-unknown --no-default-features`; lexer, parser, checker and VM all build for the browser. Native builds are unchanged |
-| Browser editor ([/start/]({{ '/start/' | relative_url }})) | <span class="pill pill-ok">Working</span> | The real compiler as WebAssembly: diagnostics, scope-aware completion and execution with no server and no upload. Highlighting is generated from `lexer.rs`, so it cannot drift from the language |
+| Browser editor ([/start/]({{ '/start/' | relative_url }})) | <span class="pill pill-ok">Working</span> | The real compiler as WebAssembly: diagnostics, scope-aware completion and execution with no server and no upload. Highlighting is generated from `lexer.rs`, so it cannot drift from the language. It also completes the host builtins with their arguments as tab stops, offers a statement template for each keyword, shows documentation on hover, copies a share link that carries the program in the URL (never sent to a server), autosaves, and keeps several files as tabs that export and import as one file. It cannot import the standard library, because the browser build has no module loader |
 | In-browser VM | <span class="pill pill-ok">Working</span> | Programs run client-side, capped at ten million instructions so a runaway `சுற்று` reports an endless loop instead of hanging the tab. File statements work against an in-memory filesystem cleared before every run |
 | In the browser: databases, Redis, HTTP server | <span class="pill pill-no">Not available</span> | A page cannot open a TCP socket or listen on a port, so Postgres, MySQL, MongoDB, Redis and `சேவை` are out of reach for a reason no amount of work here would change. Each says so when tried, in both languages |
 | In the browser: auth, ODF packages | <span class="pill pill-part">Not built yet</span> | Not the browser's doing: bcrypt wants a random source wired to the page's, and the ODF writer still reads and writes through `std::fs` rather than the host it was given. Both say they are unavailable until someone does the work — which is work, not a different machine |
 | `உள்ளிடு` in the browser | <span class="pill pill-ok">Working</span> | The page hands the program its input before the run, through `run_with_input`, and `உள்ளிடு` reads it a line at a time. Up front because a page has nowhere to type during a run: the VM would have to block, and a blocked page is a hung tab. Asking for more lines than were given is the program's own error, like reading past the end of a file |
+| Language server (`etamil-lsp`) | <span class="pill pill-part">Built and tested; not tried in a live editor</span> | The compiler's own diagnostics in both languages, completion of keywords (with statement templates), builtins and standard-library functions (which add their `இறக்கு`), hover, and go to definition. In every release package |
+| JetBrains plugin | <span class="pill pill-part">Built; not tried in a live IDE</span> | Highlighting, the language server through LSP4IJ, and a run configuration (run, check only, or serve). No debugger: the compiler has none to attach to |
+| Visual Studio extensions | <span class="pill pill-part">Built; not installed in Visual Studio</span> | The language, and the language server |
+| Emacs mode | <span class="pill pill-part">Written, with tests; not yet run in Emacs</span> | Highlighting from word lists generated from the lexer, indentation, run and check, Eglot |
+| Neovim plugin | <span class="pill pill-part">Written, with headless tests; not yet run in Neovim</span> | File type, buffer settings, the language server, tree-sitter registration and `:checkhealth`; the highlight queries are generated from the lexer |
+| Jupyter kernel | <span class="pill pill-part">Tested against the compiler; not run in a real Jupyter</span> | A cell runs in the compiler's own shell, so variables and functions persist; a cell stops at its first error |
+| Retail banking libraries | <span class="pill pill-part">Tested; nothing run against an e-Sign provider or a bureau</span> | Loans, deposits, UPI AutoPay and NACH mandates, Aadhaar e-Sign, KYC and consent, and a general-ledger mapping. Rates and thresholds are parameters, never written into a library |
+| Language specification | <span class="pill pill-ok">Working</span> | The grammar is generated from the tree-sitter grammar and accepts every program in `nUlakam/` and `examples/`. It is not shown to *reject* exactly what the compiler rejects: `--check` is the judge |
+| Homebrew tap | <span class="pill pill-ok">Working</span> | Installs, passes `brew audit --strict` and `brew test`, and runs a Tamil program on macOS (Apple Silicon and Intel) and Linux (x64 and arm64) |
+| GitHub Action | <span class="pill pill-ok">Working</span> | Passes on Linux (x64 and arm64), macOS and Windows against a real release, and with a pinned version |
+| Docker image, `.deb`, `.rpm`, apt repository, npm and NuGet packages | <span class="pill pill-part">Built by the release workflow; first run pending</span> | Each is checked on a clean machine before a release names it |
+| AWS template | <span class="pill pill-part">Passes <code>cfn-lint</code>; never deployed</span> | A CloudFormation template for ECS Fargate behind a load balancer |
+| Azure template | <span class="pill pill-part">Passes the Bicep compiler and linter; never deployed</span> | A Bicep template for Azure Container Apps with HTTPS ingress, Key Vault secrets and logs in Log Analytics |
 
 </div>
 

@@ -652,6 +652,21 @@ Connections are reused from a process-wide idle cache rather than reopened per
 request; leases are exclusive, so a transaction keeps its connection to itself.
 `ETAMIL_DB_IDLE` caps how many stay warm.
 
+**A function of your own in a query.** `தளம்_செயல்_பதிவு` registers a `செயல்` on the open
+SQLite database, and a query then calls it once per row:
+
+```etamil
+செயல் moqqam_vari(qokY, vikiqam) { திரும்பு qokY * (1 + vikiqam / 100); }
+தளம்_செயல்_பதிவு("moqqam_vari", moqqam_vari, 2, "numeric");
+தளம்_வினா "SELECT moqqam_vari(qokY, 18) AS moqqam FROM paRRuccIttu", [], வரிசைகள்;
+```
+
+The function may only compute: one that could read a file, use the network, another
+database or the environment is refused when it is registered, and each call runs under a
+step limit. A number result goes back as exact text unless you pass `"numeric"`; SQLite
+orders text after every number, so compare or sort only on a `"numeric"` function.
+See `examples/db_samples/qaLam_ceyal_paqivu.qmz`.
+
 PostgreSQL folds unquoted identifiers to lower case — write `"qokY"` to get that
 column name back as you spelled it.
 
@@ -850,6 +865,19 @@ In the compiler repository:
 cargo test                        # 295 language + 126 unit + 10 host-capture + 8 --check
 ./scripts/run_examples.sh         # every example, with expected outcomes
 ```
+
+**In continuous integration**, the `Maruff/setup-etamil@v1` GitHub Action installs the compiler on
+the runner and can check your files:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: Maruff/setup-etamil@v1
+  with:
+    check: "src/**/*.qmz"
+```
+
+`--check` parses and type-checks and never runs the program, so a failing file fails the job.
+Templates for GitHub Actions, GitLab CI and a generic shell pipeline are in `packaging/ci/`.
 
 The language tests assert on **program results**, not exit codes — every bug they
 cover exited 0 while producing the wrong answer.
