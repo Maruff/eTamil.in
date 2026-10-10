@@ -10,6 +10,7 @@
     "vocabulary": "py ../tools/gen_vocabulary.py --data ../../eTamil/etamil_lsp/data/language-data.json --out ../assets/ide/etamil-vocabulary.json",
     "build": "vite build",
     "tokens": "py ../tools/gen_tokens.py --lexer ../../eTamil/etamil_compiler/src/lexer.rs --out ../assets/ide/etamil-tokens.json",
+    "stdlib": "py ../tools/gen_stdlib.py --nulakam ../../eTamil/nUlakam --out ../assets/ide/etamil-stdlib.json",
     "wasm": "cargo build --release --target wasm32-unknown-unknown --no-default-features --lib --manifest-path ../../eTamil/etamil_compiler/Cargo.toml && wasm-bindgen --target web --no-typescript --out-dir wasm --out-name etamil_compiler ../../eTamil/etamil_compiler/target/wasm32-unknown-unknown/release/etamil_compiler.wasm"
   },
   "dependencies": {
