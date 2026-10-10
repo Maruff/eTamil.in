@@ -17,6 +17,7 @@ import init, {
   symbols_at as wasmSymbolsAt,
   script_spans as wasmScriptSpans,
   run as wasmRun,
+  run_project as wasmRunProject,
   version as wasmVersion,
 } from '../wasm/etamil_compiler.js'
 // `?url` keeps the wasm a separate fetch rather than a base64 blob inside the
@@ -114,6 +115,25 @@ export function runProgram(source) {
   } catch (e) {
     // A Rust panic traps the instance rather than throwing something catchable
     // on the Rust side, so this is the outer net.
+    return { ok: false, output: '', error: String(e), stage: 'run', files: [] }
+  }
+}
+
+/**
+ * Compile and run a project: several sources that import each other.
+ *
+ * `files` is an object from path to source and `entry` names the one to run. An
+ * `இறக்கு "vari.qmz"` finds `vari.qmz` among the others, relative to the importing file;
+ * nothing outside `files` can be imported, so a program that wants the standard library
+ * needs its sources in the object (see etamil-run-core.js). Same result as `runProgram`.
+ */
+export function runProjectSources(files, entry, input = '') {
+  if (!loaded) {
+    return { ok: false, output: '', error: 'compiler still loading', stage: 'run', files: [] }
+  }
+  try {
+    return JSON.parse(wasmRunProject(JSON.stringify(files), entry, input))
+  } catch (e) {
     return { ok: false, output: '', error: String(e), stage: 'run', files: [] }
   }
 }

@@ -13,7 +13,9 @@
 // seconds.
 
 import { EditorView, showPanel, keymap } from '@codemirror/view'
-import { runProgram, ready } from './etamil-compiler.js'
+import { runProjectSources, ready } from './etamil-compiler.js'
+import { runWithLibrary } from './etamil-run-core.js'
+import { loadLibrary } from './etamil-stdlib.js'
 import { toolbarControl } from './etamil-toolbar.js'
 
 const STAGE_LABEL = {
@@ -63,8 +65,29 @@ function doRun(view) {
   // hidden or otherwise not compositing, so a run started from the keyboard in
   // a background tab would never happen at all -- the status would sit on
   // "running" forever. A throttled timer is the lesser problem.
-  setTimeout(() => {
-    render(panel, runProgram(view.state.doc.toString()))
+  setTimeout(async () => {
+    // Every file of the project when this editor keeps one, or just the text on screen. The
+    // text is read now, so typing while the library loads does not change what runs.
+    const project = view.dom.etamilProject?.()
+    const files = project ? project.files : { 'en_niral.qmz': view.state.doc.toString() }
+    const entry = project ? project.active : 'en_niral.qmz'
+    let result
+    try {
+      result = await runWithLibrary({
+        files,
+        entry,
+        run: runProjectSources,
+        loadLibrary,
+        onLibrary: () => {
+          status.textContent = 'நூலகம் ஏற்றப்படுகிறது… / loading the library…'
+        },
+      })
+    } catch (error) {
+      // The library could not be fetched (offline, or a failed request). Say so, and let
+      // the reader run again, rather than leaving the status on "loading".
+      result = { ok: false, output: '', error: String(error.message ?? error), stage: 'run', files: [] }
+    }
+    render(panel, result)
   }, 0)
 }
 

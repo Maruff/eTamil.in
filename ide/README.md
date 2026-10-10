@@ -30,6 +30,7 @@ system out of a wasm build; the front end itself needed no porting.
 ```
 npm run tokens      # lexer.rs -> ../assets/ide/etamil-tokens.json
 npm run wasm        # compiler front end -> ide/wasm/ (build input, gitignored)
+npm run stdlib      # nUlakam/ -> ../assets/ide/etamil-stdlib.json (3.6 MB, fetched only when a program imports)
 npm run build       # bundle -> ../assets/ide/{etamil-ide.js, *.wasm}
 ```
 
@@ -154,3 +155,29 @@ this directory's neighbours.
 
 - **Tamil has no common monospace face**, so columns do not align the way they
   do for Latin. See the font stack comment in `../ide.html`.
+
+## Running a project, and the standard library
+
+The Run button runs the whole project, not only the file on screen: every file is handed to the
+compiler's `run_project`, and an `இறக்கு "vari.qmz";` finds `vari.qmz` among them, relative to the
+importing file, with the same rules as on disk (a file imported twice is included once, a cycle
+stops, two modules defining one name is an error).
+
+The browser has no files to open, so the **standard library** is data too.
+`assets/ide/etamil-stdlib.json` (3.6 MB, about 600 kB compressed) holds its sources, keyed by the
+path an import names, and is **fetched only when a run needs it**: the run is tried first with what
+the project holds, and if the compiler reports a missing module under `nUlakam/`, the library is
+fetched (once) and that module is added and the run tried again. A chain of imports takes one
+quick attempt each; each fails while the program is being assembled, before anything runs. A
+missing file of the project's own is reported without a download. The logic is
+`src/etamil-run-core.js`, tested with a stand-in compiler in `test/run-core.test.mjs`.
+
+Run `npm run stdlib` after the library changes, and commit the JSON it writes.
+
+**Library completion and hover.** The library's 940 functions are offered as you type, with the
+module in the detail column and the documentation beside it. Accepting one adds the
+`இறக்கு "nUlakam/…";` line at the top of the file (once, however many functions from that module
+you use) and a call with the parameter names as tab stops. The names live in
+`assets/ide/etamil-library.json` (386 kB, about 50 kB compressed), written by `npm run vocabulary`
+beside the keywords and builtins, and fetched when the browser is idle rather than bundled. Until it
+arrives, completion works without library functions. The logic is `src/etamil-library-core.js`.
