@@ -811,7 +811,7 @@ Definition into the library all work the moment it finishes installing. Point
 What you get:
 
 - highlighting for all 203 keywords in every spelling
-- completions for the 97 builtins and 940 `nUlakam` functions
+- completions for the 98 builtins and 940 `nUlakam` functions
 - errors from `--check` as you type — which stops after the type checker, so
   opening a file never runs it
 - hover with every spelling of a word, signature help, Go to Definition and an
