@@ -1,0 +1,9 @@
+{%- comment -%}
+The Studio form builder: design a form (fields, calculations, checks) on one side and use it on the
+other. Everything runs in the page; the bundle mounts it on this element. See ide/src/etamil-form-builder.js.
+{%- endcomment -%}
+{%- assign asset_v = site.github.build_revision | default: site.brand.version | slice: 0, 8 -%}
+<div class="full studio-forms" data-etamil-form-builder aria-live="polite">
+  <noscript><p>The form builder needs JavaScript: it runs the eTamil compiler in your browser.</p></noscript>
+</div>
+<script type="module" src="{{ '/assets/ide/etamil-ide.js' | relative_url }}?v={{ asset_v }}"></script>
