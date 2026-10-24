@@ -74,7 +74,8 @@ npm run dev         # vite dev server, ide/index.html as the harness
 | `src/etamil-compiler.js` | wasm bridge; knows nothing about CodeMirror |
 | `src/etamil-intelligence.js` | CodeMirror adapters: linter, completion (names, builtins, statement templates), hover |
 | `src/etamil-vocabulary*.js` | keywords and host builtins from the generated JSON; `-core` is pure |
-| `src/etamil-share*.js` | share link (`#code=`), autosave and restore; `-core` is pure |
+| `src/etamil-share*.js` | share link (`#code=`); `-core` is pure |
+| `src/etamil-project*.js` | tabs for several files, autosave, project import and export, opening a share link as a new file; `-core` is pure |
 | `../tools/gen_vocabulary.py` | compiler `language-data.json` -> `assets/ide/etamil-vocabulary.json` (`npm run vocabulary`) |
 | `src/etamil-keyrow.js` | mobile key row, shown by media query |
 | `src/main.js` | mounts the editor; auto-mounts `[data-etamil-editor]` |

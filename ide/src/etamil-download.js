@@ -35,7 +35,8 @@ function downloadButton(view) {
     const href = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = href
-    a.download = name
+    // The open project file, when there is one, names the download.
+    a.download = view.dom.dataset.etamilFile || name
     document.body.append(a)
     a.click()
     a.remove()
