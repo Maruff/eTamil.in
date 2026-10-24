@@ -5,10 +5,20 @@
 // (etamil-compiler.js) stays editor-agnostic so a second shell can reuse it.
 
 import { linter, lintGutter, forceLinting } from '@codemirror/lint'
-import { ViewPlugin } from '@codemirror/view'
+import { snippetCompletion } from '@codemirror/autocomplete'
+import { EditorView, ViewPlugin, hoverTooltip } from '@codemirror/view'
 
 import { diagnostics, symbolsAt, ready } from './etamil-compiler.js'
 import { etamilLanguage, IDENTIFIER, KEYWORD_TAGS } from './etamil-language.js'
+import {
+  vocabulary,
+  keywordTemplate,
+  templateForms,
+  callTemplate,
+  signature,
+  builtinInfo,
+  keywordInfo,
+} from './etamil-vocabulary.js'
 
 // --- Diagnostics -----------------------------------------------------------
 
@@ -77,15 +87,57 @@ const ICON_FOR_KIND = {
   variable: 'variable',
 }
 
-// Built once: 541 spellings that never change at runtime.
-const KEYWORD_OPTIONS = Object.entries(KEYWORD_TAGS).map(([label, tag]) => ({
-  label,
-  type: ICON_FOR_TAG[tag] ?? 'keyword',
-  // Ranks keywords below names the author actually declared -- their own
-  // variable is nearly always what they meant over a keyword that merely
-  // shares a prefix.
-  boost: -1,
-}))
+// Built once: the spellings never change at runtime. A spelling that is also a builtin
+// is left out here and offered below as the function it is, with its signature.
+const KEYWORD_OPTIONS = Object.entries(KEYWORD_TAGS)
+  .filter(([label]) => !vocabulary.builtinFor(label))
+  .map(([label, tag]) => {
+    const keyword = vocabulary.keywordFor(label)
+    return {
+      label,
+      type: ICON_FOR_TAG[tag] ?? 'keyword',
+      // Ranks keywords below names the author actually declared -- their own
+      // variable is nearly always what they meant over a keyword that merely
+      // shares a prefix.
+      boost: -1,
+      detail: keyword?.group,
+      info: keyword ? keywordInfo(keyword, label) : undefined,
+    }
+  })
+
+// A statement template for each keyword that has one, as an item of its own. It is not the
+// keyword's own completion: eTamil writes the condition before `எனில்`, so completing the
+// keyword in the middle of a statement must insert only the word, not a second statement.
+// The label starts with the spelling, so typing the keyword finds it.
+const TEMPLATE_OPTIONS = vocabulary.keywords.flatMap((keyword) =>
+  templateForms(keyword).flatMap((form) => {
+    const template = keywordTemplate(keyword, form)
+    return template
+      ? [
+          snippetCompletion(template, {
+            label: `${form} …`,
+            type: 'keyword',
+            detail: 'statement template',
+            boost: -2,
+          }),
+        ]
+      : []
+  })
+)
+
+// The host builtins, with the call as a snippet. The standard library is not offered: the
+// browser's compiler cannot import, so a library function would not run here.
+const BUILTIN_OPTIONS = vocabulary.builtins.flatMap((builtin) =>
+  builtin.forms.map((form) =>
+    snippetCompletion(callTemplate(builtin, form), {
+      label: form,
+      type: 'function',
+      detail: signature(builtin, form),
+      info: builtinInfo(builtin, form),
+      boost: -1,
+    })
+  )
+)
 
 function completeEtamil(context) {
   const token = context.matchBefore(IDENTIFIER)
@@ -110,7 +162,7 @@ function completeEtamil(context) {
 
   return {
     from: token.from,
-    options: [...declared, ...KEYWORD_OPTIONS],
+    options: [...declared, ...BUILTIN_OPTIONS, ...KEYWORD_OPTIONS, ...TEMPLATE_OPTIONS],
     // Re-filter in place while the word grows instead of re-querying wasm on
     // every keystroke.
     validFor: IDENTIFIER,
@@ -121,12 +173,77 @@ function completeEtamil(context) {
 // it composes with the one basicSetup already installs instead of fighting it.
 const etamilCompletion = etamilLanguage.data.of({ autocomplete: completeEtamil })
 
+// --- Hover -----------------------------------------------------------------
+
+// The word under the pointer: the identifier that covers the position, found with the
+// lexer's own pattern (CodeMirror's word boundaries split a Tamil word at its pulli).
+function wordAt(state, pos) {
+  const line = state.doc.lineAt(pos)
+  const pattern = new RegExp(IDENTIFIER.source, 'g')
+  for (let match = pattern.exec(line.text); match; match = pattern.exec(line.text)) {
+    const from = line.from + match.index
+    const to = from + match[0].length
+    if (pos >= from && pos <= to) return { text: match[0], from, to }
+  }
+  return null
+}
+
+function tooltip(heading, body) {
+  const dom = document.createElement('div')
+  dom.className = 'etamil-hover'
+  const strong = document.createElement('strong')
+  strong.textContent = heading
+  dom.append(strong)
+  if (body) {
+    const text = document.createElement('div')
+    text.textContent = body
+    dom.append(text)
+  }
+  return { dom }
+}
+
+// What a keyword or a builtin is, from the compiler's own documentation. A name the author
+// declared gets nothing here: completion already shows its kind and type, and a tooltip that
+// repeats the word back is noise.
+const etamilHover = hoverTooltip((view, pos) => {
+  const word = wordAt(view.state, pos)
+  if (!word) return null
+  const builtin = vocabulary.builtinFor(word.text)
+  if (builtin) {
+    return {
+      pos: word.from,
+      end: word.to,
+      above: true,
+      create: () => tooltip(`builtin ${signature(builtin, word.text)}`, builtinInfo(builtin, word.text)),
+    }
+  }
+  const keyword = vocabulary.keywordFor(word.text)
+  if (keyword && !keyword.noSyntax) {
+    return {
+      pos: word.from,
+      end: word.to,
+      above: true,
+      create: () => tooltip(`keyword ${word.text}`, keywordInfo(keyword, word.text)),
+    }
+  }
+  return null
+})
+
+const hoverTheme = EditorView.theme({
+  '.etamil-hover': {
+    padding: '6px 10px',
+    maxWidth: '420px',
+    whiteSpace: 'pre-wrap',
+    color: 'var(--ide-text, #DCE9F8)',
+  },
+})
+
 // --- Public ----------------------------------------------------------------
 
 /**
- * Diagnostics and completion backed by the real compiler. Add alongside
+ * Diagnostics, completion and hover backed by the real compiler. Add alongside
  * `etamil()` from etamil-language.js, which supplies highlighting.
  */
 export function etamilIntelligence() {
-  return [etamilLinter, lintGutter(), relintOnLoad, etamilCompletion]
+  return [etamilLinter, lintGutter(), relintOnLoad, etamilCompletion, etamilHover, hoverTheme]
 }
