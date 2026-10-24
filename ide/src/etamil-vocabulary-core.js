@@ -5,8 +5,8 @@
 // from the compiler's own generated vocabulary (keywords with every spelling and a
 // statement template, and the host builtins). The wrapper in etamil-vocabulary.js loads it.
 //
-// The browser's compiler cannot import, so the standard library is not here: offering a
-// function the page cannot run would be offering something broken.
+// The standard library's functions are not here: they are most of the size and wanted later, so
+// they are a file of their own, fetched when the editor is idle (etamil-library-core.js).
 
 /** Whether a spelling is written in Tamil script rather than Latin letters. */
 export function isTamil(text) {

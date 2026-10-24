@@ -125,11 +125,22 @@ function createController() {
       return () => listeners.delete(fn)
     },
 
+    // Every file as it is now, and the one in the editor, for running.
+    snapshot() {
+      sync()
+      return {
+        files: Object.fromEntries(project.files.map((f) => [f.name, f.doc])),
+        active: project.active,
+      }
+    },
+
     // Called whenever a plugin is built; only the first call for a view does anything.
     attach(v) {
       if (view === v) return
       view = v
       base = v.state
+      // The Run button runs the whole project, so it asks for every file; see etamil-run.js.
+      v.dom.etamilProject = () => this.snapshot()
       project = parse(read(storageKey())) ?? makeProject(read(legacyKey()) ?? v.state.doc.toString())
       // Not synchronously: a plugin may not dispatch while the view is being constructed.
       Promise.resolve().then(async () => {

@@ -19,6 +19,14 @@ import {
   builtinInfo,
   keywordInfo,
 } from './etamil-vocabulary.js'
+import {
+  currentLibrary,
+  startLoadingLibrary,
+  importEdit,
+  callSnippet,
+  libraryDetail,
+  libraryInfo,
+} from './etamil-library.js'
 
 // --- Diagnostics -----------------------------------------------------------
 
@@ -63,6 +71,15 @@ const etamilLinter = linter(
 // keystroke.
 const relintOnLoad = ViewPlugin.define((view) => {
   ready().then(() => forceLinting(view))
+  return {}
+})
+
+// The library's function names arrive after the editor is up, when the browser is idle, so
+// they never delay the first keystroke or the first paint.
+const loadLibraryWhenIdle = ViewPlugin.define(() => {
+  const start = () => startLoadingLibrary()
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(start, { timeout: 3000 })
+  else setTimeout(start, 500)
   return {}
 })
 
@@ -125,8 +142,7 @@ const TEMPLATE_OPTIONS = vocabulary.keywords.flatMap((keyword) =>
   })
 )
 
-// The host builtins, with the call as a snippet. The standard library is not offered: the
-// browser's compiler cannot import, so a library function would not run here.
+// The host builtins, with the call as a snippet.
 const BUILTIN_OPTIONS = vocabulary.builtins.flatMap((builtin) =>
   builtin.forms.map((form) =>
     snippetCompletion(callTemplate(builtin, form), {
@@ -138,6 +154,40 @@ const BUILTIN_OPTIONS = vocabulary.builtins.flatMap((builtin) =>
     })
   )
 )
+
+// The standard library's functions, once their file has loaded (etamil-library.js). Accepting
+// one also adds the `இறக்கு` line that makes it work, at the top of the file, unless the program
+// already imports that module. Built once, on first use after the load.
+let libraryOptions = null
+function libraryCompletions() {
+  const library = currentLibrary()
+  if (!library) return []
+  libraryOptions ??= library.functions.flatMap((fn) =>
+    fn.forms.map((form) => {
+      const call = snippetCompletion(callSnippet(fn, form), {
+        label: form,
+        type: 'function',
+        detail: libraryDetail(fn),
+        info: libraryInfo(fn),
+        // Below the names the author declared, the builtins and the keywords: a library function
+        // is the right answer only when nothing nearer matches, and there are 940 of them.
+        boost: -2,
+      })
+      const insertCall = call.apply
+      return {
+        ...call,
+        apply: (view, completion, from, to) => {
+          // The import goes in first, so the offsets are shifted by what it added.
+          const edit = importEdit(view.state.doc.toString(), fn.module)
+          const shift = edit ? edit.insert.length : 0
+          if (edit) view.dispatch({ changes: edit, userEvent: 'input.complete' })
+          insertCall(view, completion, from + shift, to + shift)
+        },
+      }
+    })
+  )
+  return libraryOptions
+}
 
 function completeEtamil(context) {
   const token = context.matchBefore(IDENTIFIER)
@@ -162,7 +212,7 @@ function completeEtamil(context) {
 
   return {
     from: token.from,
-    options: [...declared, ...BUILTIN_OPTIONS, ...KEYWORD_OPTIONS, ...TEMPLATE_OPTIONS],
+    options: [...declared, ...BUILTIN_OPTIONS, ...KEYWORD_OPTIONS, ...TEMPLATE_OPTIONS, ...libraryCompletions()],
     // Re-filter in place while the word grows instead of re-querying wasm on
     // every keystroke.
     validFor: IDENTIFIER,
@@ -217,6 +267,17 @@ const etamilHover = hoverTooltip((view, pos) => {
       create: () => tooltip(`builtin ${signature(builtin, word.text)}`, builtinInfo(builtin, word.text)),
     }
   }
+  const libraryFunction = currentLibrary()?.functionFor(word.text)
+  if (libraryFunction) {
+    return {
+      pos: word.from,
+      end: word.to,
+      above: true,
+      create: () =>
+        // The documentation line already begins with the signature, so the heading does not repeat it.
+        tooltip(`library function ${word.text}`, libraryInfo(libraryFunction)),
+    }
+  }
   const keyword = vocabulary.keywordFor(word.text)
   if (keyword && !keyword.noSyntax) {
     return {
@@ -245,5 +306,5 @@ const hoverTheme = EditorView.theme({
  * `etamil()` from etamil-language.js, which supplies highlighting.
  */
 export function etamilIntelligence() {
-  return [etamilLinter, lintGutter(), relintOnLoad, etamilCompletion, etamilHover, hoverTheme]
+  return [etamilLinter, lintGutter(), relintOnLoad, loadLibraryWhenIdle, etamilCompletion, etamilHover, hoverTheme]
 }
