@@ -103,6 +103,34 @@ Linux இருமம் musl-உடன் உருவாக்கப்பட�
 [வெளியீட்டுப் பக்கத்தில்]({{ site.brand.releases_url }}) பட்டியலிடப்பட்டுள்ளது.
 </div>
 
+## வேறு வழிகளில் நிறுவுதல்
+
+இவை ஒவ்வொன்றும் மேலுள்ள காப்பகங்களில் உள்ள அதே தொகுப்பி, நிலையான நூலகம், எடுத்துக்காட்டுகளை நிறுவுகின்றன.
+
+| எங்கே | கட்டளை |
+|---|---|
+| **Homebrew** (macOS, Linux) | `brew install Maruff/etamil/etamil` |
+| **apt** (Debian, Ubuntu) | கீழுள்ள களஞ்சியத்தைச் சேர்த்து, `sudo apt install etamil` |
+| **rpm** (Fedora, RHEL, openSUSE) | `sudo dnf install ./etamil-<version>-1.x86_64.rpm`, [வெளியீட்டுப் பக்கத்திலிருந்து]({{ site.brand.releases_url }}) |
+| **Docker** | `docker run --rm -v "$PWD":/work ghcr.io/maruff/etamil --vm hello.qmz` |
+| **npm** | `npx etamil hello.qmz`, அல்லது `npm install -g etamil` |
+| **.NET** | `dotnet tool install -g etamil` |
+| **GitHub Actions** | `uses: Maruff/setup-etamil@v1` |
+
+**apt.** களஞ்சியம் வெளியீட்டுப் பக்கத்தில் உள்ளது; அதனுடன் வெளியிடப்படும் திறவுகோலால் கையொப்பமிடப்படுகிறது:
+
+```bash
+sudo curl -fsSL https://github.com/Maruff/eTamil_lang/releases/latest/download/etamil-archive-keyring.gpg \
+    -o /usr/share/keyrings/etamil.gpg
+echo "deb [signed-by=/usr/share/keyrings/etamil.gpg] https://github.com/Maruff/eTamil_lang/releases/latest/download ./" \
+    | sudo tee /etc/apt/sources.list.d/etamil.list
+sudo apt update && sudo apt install etamil
+```
+
+இது புதிய வெளியீட்டை மட்டுமே கொண்டிருக்கும்; `apt upgrade` உங்களை அடுத்த வெளியீட்டுக்கு மாற்றும்.
+
+**Docker.** படம் `etamil` ஐ root அல்லாத பயனராக இயக்குகிறது; `/work` அதன் பணி அடைவு, எனவே உங்கள் அடைவை அங்கே இணைக்கவும். `latest` ஐ நம்புவதற்குப் பதிலாக `ghcr.io/maruff/etamil:2.0.0` போன்ற வெளியீட்டுக் குறிச்சொல்லைப் பயன்படுத்துங்கள்.
+
 ## மூலக்குறியீட்டிலிருந்து உருவாக்குதல்
 
 விருப்ப PostgreSQL, MySQL drivers, LLVM backend வேண்டுமெனில், அல்லது தொகுப்பியிலேயே
@@ -223,6 +251,20 @@ python3 scripts/transliterate.py --check   # எழுத்துப்பெ�
 நீங்களே உருவாக்கிய தொகுப்பியை இயக்க வேண்டுமெனில் `etamil.compilerPath`-ஐ அதை
 நோக்கிக் காட்டுங்கள்; முனையத்திலும் `etamil` பயன்படுத்த **eTamil: Install the
 compiler for use outside the editor** கட்டளையை இயக்குங்கள்.
+
+அதே நீட்சி Open VSX-இலும் உள்ளது, எனவே **Cursor, Windsurf, VSCodium** ஆகியவையும் அதைப் பெறுகின்றன. மற்ற திருத்திகள்:
+
+- **JetBrains IDE-கள்** (2024.2 மற்றும் பின்): [செருகுநிரல்]({{ site.brand.compiler_repo }}/tree/main/packaging/jetbrains) —
+  வண்ணமிடல், மொழிச் சேவையகம், இயக்க அமைவு ஆகியவற்றுடன்; Ctrl+Shift+F10 ஒரு `.qmz` கோப்பை இயக்கும், சரிபார்க்கும் அல்லது சேவையாக்கும்.
+- **Visual Studio:** மொழிக்கும் மொழிச் சேவையகத்துக்குமான [நீட்சிகள்]({{ site.brand.compiler_repo }}/tree/main/packaging/visualstudio).
+- **Emacs:** [`etamil-mode`]({{ site.brand.compiler_repo }}/tree/main/eTamil_Emacs), Eglot அமைப்புடன்.
+- **Neovim:** [செருகுநிரல்]({{ site.brand.compiler_repo }}/tree/main/eTamil_Neovim): கோப்பு வகை, மொழி சேவையகம், tree-sitter சிறப்பொளிர்வு, `:checkhealth etamil`.
+- **Helix, Zed:** [tree-sitter இலக்கணம்]({{ site.brand.compiler_repo }}/tree/main/tree-sitter-etamil).
+- **Language Server Protocol-ஐப் புரிந்துகொள்ளும் எந்தத் திருத்தியும்:** `etamil-lsp` — ஒவ்வொரு வெளியீட்டுத் தொகுப்பிலும் உள்ளது;
+  தொகுப்பியின் சொந்தப் பிழைகள், நிறைவுசெய்தல், சுட்டுதல், வரையறைக்குச் செல்லுதல் ஆகியவற்றைத் தருகிறது.
+- **Jupyter:** [eTamil கர்னல்]({{ site.brand.compiler_repo }}/tree/main/eTamil_Jupyter) — நோட்புக் கலத்தில் eTamil இயங்கும்.
+
+இவற்றுள் சில கட்டப்பட்டுச் சோதிக்கப்பட்டவை, ஆனால் நேரடித் திருத்தியில் இன்னும் முயலப்படவில்லை; எவை என்பதை [நிலைப் பக்கம்]({{ '/ta/status/' | relative_url }}) சொல்கிறது.
 
 ## அடுத்து எங்கே
 
