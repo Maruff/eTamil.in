@@ -18,7 +18,7 @@ author:
 # Read by the theme, not by jekyll-seo-tag.
 brand:
   name: eTamil.in
-  version: "1.4.2"
+  version: "2.0.0"
   license: AGPL-3.0-or-later
   license_url: https://www.gnu.org/licenses/agpl-3.0.html
   compiler_repo: https://github.com/Maruff/eTamil_lang
